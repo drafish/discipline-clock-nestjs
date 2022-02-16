@@ -53,6 +53,9 @@ export class UserController {
   @Get('logout')
   async logout(@Req() { session }: Request): Promise<any> {
     session.userId = undefined;
+    session.captcha = undefined;
+    session.email = undefined;
+    session.wx = undefined;
     return {
       code: 'SUCCESS',
     };
