@@ -263,7 +263,7 @@ export class UserController {
     );
     if (!session_key) {
       session.wx = undefined;
-      return { code: 'ERROR', msg: 'wx.login调用失败' };
+      return { code: 'ERROR', msg: 'wx.login fail' };
     }
     session.wx = { openId: openid, sessionKey: session_key };
     return { code: 'SUCCESS' };
@@ -279,7 +279,7 @@ export class UserController {
     if (!session.wx) {
       return {
         code: 'ERROR',
-        msg: '请先调用wx.login',
+        msg: 'wx.login first',
       };
     }
     const sessionKeyBuffer = Buffer.from(session.wx.sessionKey, 'base64');
