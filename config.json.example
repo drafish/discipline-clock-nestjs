@@ -1,0 +1,16 @@
+{
+  "weixin": {
+    "appid": "appid123",
+    "secret": "secret123"
+  },
+  "email": {
+    "user": "user123",
+    "password": "password123",
+    "host": "host.com",
+    "ssl": true
+  },
+  "session": {
+    "name": "name123",
+    "secret": "secret123"
+  }
+}
