@@ -258,6 +258,10 @@ export class UserController {
         `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`,
       ),
     );
+    if (!session_key) {
+      session.wx = undefined;
+      return { code: 'ERROR', msg: 'wx.login调用失败' };
+    }
     session.wx = { openId: openid, sessionKey: session_key };
     return { code: 'SUCCESS' };
   }
