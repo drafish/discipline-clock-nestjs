@@ -1,17 +1,18 @@
 import { NestFactory } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import session from 'express-session';
 import fileStoreFunction from 'session-file-store';
 import { AppModule } from './app.module';
-import config from '../config.json';
 
 const FileStore = fileStoreFunction(session);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
   app.use(
     session({
-      name: config.session.name,
-      secret: config.session.secret,
+      name: configService.get('session.name'),
+      secret: configService.get('session.secret'),
       store: new FileStore(),
       resave: false,
       saveUninitialized: false,
@@ -20,6 +21,6 @@ async function bootstrap() {
       },
     }),
   );
-  await app.listen(process.env.PORT || 3000);
+  await app.listen(configService.get('PORT') || 3000);
 }
 bootstrap();

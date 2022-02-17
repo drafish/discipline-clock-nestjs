@@ -4,6 +4,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 // import { AppController } from './app.controller';
 import { UserModule } from './user/user.module';
@@ -11,7 +12,12 @@ import { RecordModule } from './record/record.module';
 import { AuthMiddleware } from './auth.middleware';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), UserModule, RecordModule],
+  imports: [
+    TypeOrmModule.forRoot(),
+    ConfigModule.forRoot(),
+    UserModule,
+    RecordModule,
+  ],
   // controllers: [AppController],
 })
 export class AppModule implements NestModule {

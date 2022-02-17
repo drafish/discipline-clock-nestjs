@@ -38,5 +38,5 @@ yarn.lock
 package-lock.json
 
 ormconfig.json
-config.json
 sessions
+.env

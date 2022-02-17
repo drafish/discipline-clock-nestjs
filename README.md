@@ -13,7 +13,7 @@ $ npm install
 复制配置文件示例，写你自己的配置
 
 ```bash
-$ cp config.json.example config.json
+$ cp .env.example .env
 $ cp ormconfig.json.example ormconfig.json
 ```
 

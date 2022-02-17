@@ -1,7 +1,7 @@
 {
   "apps" : [{
     "name"       : "discipline-clock",
-    "script"     : "dist/src/main.js",
+    "script"     : "dist/main.js",
     "exec_mode"  : "cluster",
     "env": {
       "PORT": 3000

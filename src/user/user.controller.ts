@@ -8,6 +8,7 @@ import {
   ValidationPipe,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
@@ -22,12 +23,9 @@ import {
   UpdatePwdDto,
   RegisterUserDto,
   SendEmailDto,
+  WxLoginDto,
+  WxAuthorizeDto,
 } from './dto';
-import config from '../../config.json';
-
-const client = new SMTPClient(config.email);
-
-const { appid, secret } = config.weixin;
 
 declare module 'express-session' {
   interface SessionData {
@@ -49,6 +47,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
     private readonly logger: Logger,
   ) {}
 
@@ -81,6 +80,12 @@ export class UserController {
     @Req() { session }: Request,
     @Body() { email }: SendEmailDto,
   ): Promise<any> {
+    const emailConfig = {
+      user: this.configService.get('email.user'),
+      password: this.configService.get('email.password'),
+      host: this.configService.get('email.host'),
+      ssl: true,
+    };
     if (
       session.email &&
       new Date().getTime() - session.email.createTime < 5 * 60 * 1000
@@ -92,12 +97,14 @@ export class UserController {
     const captcha = Math.random().toFixed(6).slice(-6);
     session.email = { captcha, createTime: new Date().getTime() };
     try {
+      const client = new SMTPClient(emailConfig);
+
       await client.sendAsync(
         new Message({
           text: `欢迎使用打卡服务，验证码：${captcha}。有效时间5分钟`,
-          from: `${config.email.user}@126.com`,
+          from: `${emailConfig.user}@126.com`,
           to: email,
-          // cc: `${config.email.user}@126.com`,
+          // cc: `${emailConfig.user}@126.com`,
           subject: '打卡注册验证码',
         }),
       );
@@ -252,10 +259,11 @@ export class UserController {
   @UsePipes(new ValidationPipe())
   @Post('wxLogin')
   async wxLogin(
-    @Body()
-    { code }: { code: string },
+    @Body() { code }: WxLoginDto,
     @Req() { session }: Request,
   ): Promise<any> {
+    const appid = this.configService.get('weixin.appid');
+    const secret = this.configService.get('weixin.secret');
     try {
       const { data } = await firstValueFrom(
         this.httpService.get(
@@ -279,10 +287,10 @@ export class UserController {
   @UsePipes(new ValidationPipe())
   @Post('wxAuthorize')
   async wxAuthorize(
-    @Body()
-    { encryptedData, iv }: { encryptedData: string; iv: string },
+    @Body() { encryptedData, iv }: WxAuthorizeDto,
     @Req() { session }: Request,
   ): Promise<any> {
+    const appid = this.configService.get('weixin.appid');
     if (!session.wx) {
       return {
         code: 'ERROR',
