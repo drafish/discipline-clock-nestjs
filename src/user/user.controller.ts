@@ -6,6 +6,7 @@ import {
   Req,
   UsePipes,
   ValidationPipe,
+  Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -48,6 +49,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly httpService: HttpService,
+    private readonly logger: Logger,
   ) {}
 
   @Get('logout')
@@ -254,19 +256,24 @@ export class UserController {
     { code }: { code: string },
     @Req() { session }: Request,
   ): Promise<any> {
-    const {
-      data: { openid, session_key },
-    } = await firstValueFrom(
-      this.httpService.get(
-        `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`,
-      ),
-    );
-    if (!session_key) {
-      session.wx = undefined;
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get(
+          `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${secret}&js_code=${code}&grant_type=authorization_code`,
+        ),
+      );
+      const { openid, session_key } = data;
+      if (!session_key) {
+        this.logger.error(JSON.stringify(data));
+        session.wx = undefined;
+        return { code: 'ERROR', msg: 'wx.login fail' };
+      }
+      session.wx = { openId: openid, sessionKey: session_key };
+      return { code: 'SUCCESS' };
+    } catch (error) {
+      this.logger.error(JSON.stringify(error));
       return { code: 'ERROR', msg: 'wx.login fail' };
     }
-    session.wx = { openId: openid, sessionKey: session_key };
-    return { code: 'SUCCESS' };
   }
 
   @UsePipes(new ValidationPipe())
@@ -302,7 +309,10 @@ export class UserController {
         decipher.final('utf8');
       const result = JSON.parse(decoded);
       if (result.watermark.appid !== appid) {
-        throw new Error('Illegal Buffer');
+        this.logger.error(
+          JSON.stringify(`appid error: ${result.watermark.appid}`),
+        );
+        return { code: 'ERROR', msg: 'appid error' };
       }
       const { nickName, avatarUrl } = result;
       const user = await this.userService.findOne({ nickname: nickName });
@@ -330,8 +340,9 @@ export class UserController {
           detail: pick(newUser, ['nickname', 'email', 'id', 'avatarUrl']),
         };
       }
-    } catch (err) {
-      throw new Error('Illegal Buffer');
+    } catch (error) {
+      this.logger.error(JSON.stringify(error));
+      return { code: 'ERROR', msg: 'parse error' };
     }
   }
 }
