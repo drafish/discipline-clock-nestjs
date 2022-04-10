@@ -25,6 +25,17 @@ export class RecordController {
     return { code: 'SUCCESS', detail: result };
   }
 
+  @Get('month')
+  async month(
+    @Query() { month, userId }: { month: string; userId: number },
+  ): Promise<any> {
+    const result = await this.recordService.findByMonth(month, userId);
+    return {
+      code: 'SUCCESS',
+      detail: result.map((item: any) => item.recordDate),
+    };
+  }
+
   @Get('list')
   async list(
     @Query() { pageNum, pageSize }: { pageNum: number; pageSize: number },

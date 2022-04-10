@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
+import dayjs from 'dayjs';
 import { RecordEntity } from './record.entity';
 
 @Injectable()
@@ -29,6 +30,19 @@ export class RecordService {
       .take(pageSize)
       .orderBy('record.createTime', 'DESC')
       .getManyAndCount();
+  }
+
+  async findByMonth(month: string, userId: number): Promise<any> {
+    return await this.recordRepository.find({
+      select: ['recordDate'],
+      where: {
+        recordDate: Between(
+          dayjs(month).startOf('month').format('YYYY-MM-DD'),
+          dayjs(month).endOf('month').format('YYYY-MM-DD'),
+        ),
+        userId,
+      },
+    });
   }
 
   async findById(id: number): Promise<any> {
